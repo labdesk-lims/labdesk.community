@@ -4,6 +4,9 @@
 # Introduction
 This is the LABDESK Community Page. Here you can download the latest version of our beloved LIMS. For professional support do not hesitate to contact us at https://labdesk.net/contact/
 
+# Labdesk VM
+Installing LABDESK is not a trivial task. Please contact us to download a copy of our fully fledged virtual machine for testing purposes.
+
 # Requirements
 Read more about the requirements running labdesk which are available at our documentation https://labdesk.net/documentation
 
