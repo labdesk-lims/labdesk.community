@@ -1,5 +1,4 @@
-![logo](https://github.com/user-attachments/assets/ea0e67f4-c9be-4837-8af0-d03e026101de)
-
+![348459596-cb455dbd-a222-460c-967c-9522ae2a4211](https://github.com/user-attachments/assets/96b2caf3-cbde-4f6c-af9a-2f4fcd81f953)
 
 # Introduction
 This is the LABDESK Community Page. Here you can download the latest version of our beloved LIMS. For professional support do not hesitate to contact us at https://labdesk.net/contact/
