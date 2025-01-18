@@ -10,4 +10,4 @@ Installing LABDESK is not a trivial task. Please contact us to download a copy o
 Read more about the requirements running labdesk which are available at our documentation https://labdesk.net/documentation
 
 # Licence
-LABDESK LIMS and its components are available as free software. Further information is available at: https://labdesk.net/licence/
+Feel free to download and test LABDESK LIMS and its components free of charge. Further information on licensing is available at: https://labdesk.net/licence/
