@@ -1,5 +1,5 @@
 ﻿/*
-Bereitstellungsskript für v2-8-0
+Bereitstellungsskript für v2-9-0
 
 Dieser Code wurde von einem Tool generiert.
 Änderungen an dieser Datei führen möglicherweise zu falschem Verhalten und gehen verloren, falls
@@ -13,8 +13,8 @@ SET NUMERIC_ROUNDABORT OFF;
 
 
 GO
-:setvar DatabaseName "v2-8-0"
-:setvar DefaultFilePrefix "v2-8-0"
+:setvar DatabaseName "v2-9-0"
+:setvar DefaultFilePrefix "v2-9-0"
 :setvar DefaultDataPath "D:\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\"
 :setvar DefaultLogPath "D:\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\"
 
@@ -37,214 +37,6 @@ IF N'$(__IsSqlCmdEnabled)' NOT LIKE N'True'
 
 GO
 USE [$(DatabaseName)];
-
-
-GO
-PRINT N'DEFAULT-Einschränkung "[dbo].[DF_setup_show_desktop]" wird gelöscht...';
-
-
-GO
-ALTER TABLE [dbo].[setup] DROP CONSTRAINT [DF_setup_show_desktop];
-
-
-GO
-PRINT N'DEFAULT-Einschränkung "[dbo].[DF_setup_verbous]" wird gelöscht...';
-
-
-GO
-ALTER TABLE [dbo].[setup] DROP CONSTRAINT [DF_setup_verbous];
-
-
-GO
-PRINT N'DEFAULT-Einschränkung "[dbo].[DF_setup_vat]" wird gelöscht...';
-
-
-GO
-ALTER TABLE [dbo].[setup] DROP CONSTRAINT [DF_setup_vat];
-
-
-GO
-PRINT N'DEFAULT-Einschränkung "[dbo].[DF_setup_upload_max]" wird gelöscht...';
-
-
-GO
-ALTER TABLE [dbo].[setup] DROP CONSTRAINT [DF_setup_upload_max];
-
-
-GO
-PRINT N'DEFAULT-Einschränkung "unbenannte Einschränkungen auf [dbo].[setup]" wird gelöscht...';
-
-
-GO
-ALTER TABLE [dbo].[setup] DROP CONSTRAINT [DF__setup__num_forma__18B6AB08];
-
-
-GO
-PRINT N'DEFAULT-Einschränkung "unbenannte Einschränkungen auf [dbo].[setup]" wird gelöscht...';
-
-
-GO
-ALTER TABLE [dbo].[setup] DROP CONSTRAINT [DF__setup__num_cultu__19AACF41];
-
-
-GO
-PRINT N'Das erneute Erstellen der Tabelle "[dbo].[setup]" wird gestartet....';
-
-
-GO
-BEGIN TRANSACTION;
-
-SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
-
-SET XACT_ABORT ON;
-
-CREATE TABLE [dbo].[tmp_ms_xx_setup] (
-    [id]              INT           IDENTITY (1, 1) NOT NULL,
-    [email_profile]   VARCHAR (255) NULL,
-    [alert_document]  INT           NULL,
-    [show_desktop]    BIT           CONSTRAINT [DF_setup_show_desktop] DEFAULT 0 NULL,
-    [verbous]         BIT           CONSTRAINT [DF_setup_verbous] DEFAULT 0 NULL,
-    [vat]             FLOAT (53)    CONSTRAINT [DF_setup_vat] DEFAULT 0 NOT NULL,
-    [upload_max_byte] INT           CONSTRAINT [DF_setup_upload_max] DEFAULT ((1000000)) NOT NULL,
-    [nav_button]      BIT           DEFAULT 0 NOT NULL,
-    [num_format]      NCHAR (1)     DEFAULT 'G' NOT NULL,
-    [num_culture]     NCHAR (5)     DEFAULT 'de-de' NOT NULL,
-    [version_fe]      VARCHAR (255) NULL,
-    CONSTRAINT [tmp_ms_xx_constraint_PK_configuration1] PRIMARY KEY CLUSTERED ([id] ASC)
-);
-
-IF EXISTS (SELECT TOP 1 1 
-           FROM   [dbo].[setup])
-    BEGIN
-        SET IDENTITY_INSERT [dbo].[tmp_ms_xx_setup] ON;
-        INSERT INTO [dbo].[tmp_ms_xx_setup] ([id], [email_profile], [alert_document], [show_desktop], [verbous], [vat], [upload_max_byte], [num_format], [num_culture], [version_fe])
-        SELECT   [id],
-                 [email_profile],
-                 [alert_document],
-                 [show_desktop],
-                 [verbous],
-                 [vat],
-                 [upload_max_byte],
-                 [num_format],
-                 [num_culture],
-                 [version_fe]
-        FROM     [dbo].[setup]
-        ORDER BY [id] ASC;
-        SET IDENTITY_INSERT [dbo].[tmp_ms_xx_setup] OFF;
-    END
-
-DROP TABLE [dbo].[setup];
-
-EXECUTE sp_rename N'[dbo].[tmp_ms_xx_setup]', N'setup';
-
-EXECUTE sp_rename N'[dbo].[tmp_ms_xx_constraint_PK_configuration1]', N'PK_configuration', N'OBJECT';
-
-COMMIT TRANSACTION;
-
-SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
-
-
-GO
-PRINT N'Tabelle "[dbo].[material_hp]" wird erstellt...';
-
-
-GO
-CREATE TABLE [dbo].[material_hp] (
-    [id]         INT           IDENTITY (1, 1) NOT NULL,
-    [identifier] VARCHAR (255) NOT NULL,
-    [applies]    BIT           NOT NULL,
-    [material]   INT           NOT NULL,
-    CONSTRAINT [PK_material_hp] PRIMARY KEY CLUSTERED ([id] ASC)
-);
-
-
-GO
-PRINT N'DEFAULT-Einschränkung "[dbo].[DF_material_hp_applies]" wird erstellt...';
-
-
-GO
-ALTER TABLE [dbo].[material_hp]
-    ADD CONSTRAINT [DF_material_hp_applies] DEFAULT ((0)) FOR [applies];
-
-
-GO
-PRINT N'Fremdschlüssel "[dbo].[FK_material_hp]" wird erstellt...';
-
-
-GO
-ALTER TABLE [dbo].[material_hp] WITH NOCHECK
-    ADD CONSTRAINT [FK_material_hp] FOREIGN KEY ([material]) REFERENCES [dbo].[material] ([id]) ON DELETE CASCADE;
-
-
-GO
-PRINT N'CHECK-Einschränkung "[dbo].[CK_setup]" wird erstellt...';
-
-
-GO
-ALTER TABLE [dbo].[setup] WITH NOCHECK
-    ADD CONSTRAINT [CK_setup] CHECK ([vat]>=(0) AND [vat]<=(100));
-
-
-GO
-PRINT N'Trigger "[dbo].[setup_insert]" wird erstellt...';
-
-
-GO
--- =============================================
--- Author:		Kogel, Lutz
--- Create date: 2022 January
--- Description:	-
--- =============================================
-CREATE TRIGGER [dbo].[setup_insert]
-   ON  dbo.setup
-   AFTER INSERT
-AS 
-BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
-
-    -- Insert statements for trigger here
-	IF (SELECT COUNT(id) FROM setup) > 1
-		THROW 51000, 'Only one row config is allowed.', 1 
-END
-GO
-PRINT N'Trigger "[dbo].[material_insert_update]" wird erstellt...';
-
-
-GO
--- =============================================
--- Author:		Kogel, Lutz
--- Create date: 2024 December
--- Description:	-
--- =============================================
-CREATE TRIGGER [dbo].[material_insert_update]
-   ON  dbo.material
-   AFTER INSERT, UPDATE
-AS 
-BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
-
-	-- Insert material_hp cross table
-	IF NOT EXISTS (SELECT id FROM deleted)
-	BEGIN
-		INSERT INTO material_hp (identifier, material) SELECT item, (SELECT id FROM inserted) FROM translation WHERE container = 'material' AND (item LIKE 'hazard_%' OR item LIKE '%precautionary_%' OR item LIKE 'EUH_%') ORDER BY item ASC
-	END
-
-	-- UPDATE material_hp cross table
-	IF EXISTS (SELECT id FROM deleted)
-	BEGIN
-		INSERT INTO material_hp (identifier, material) SELECT item, (SELECT id FROM inserted) item FROM translation WHERE container = 'material' AND (item LIKE 'hazard_%' OR item LIKE '%precautionary_%' OR item LIKE 'EUH_%') AND item NOT IN (SELECT identifier FROM material_hp WHERE material = (SELECT ID FROM inserted))
-	END
-END
-GO
-PRINT N'Sicht "[dbo].[view_attachment_revision]" wird aktualisiert...';
-
-
-GO
-EXECUTE sp_refreshsqlmodule N'[dbo].[view_attachment_revision]';
 
 
 GO
@@ -367,6 +159,170 @@ BEGIN
 	END CATCH
 END
 GO
+PRINT N'Prozedur "[dbo].[report_horizontal_profile]" wird geändert...';
+
+
+GO
+-- =============================================
+-- Author:		Kogel, Lutz
+-- Create date: 2024 September
+-- Description:	Horizontal profile table
+-- =============================================
+ALTER PROCEDURE [dbo].[report_horizontal_profile]
+	-- Add the parameters for the stored procedure here
+	@request INT
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    -- Insert statements for procedure here
+	DECLARE analysis_cur CURSOR FOR SELECT DISTINCT profile_analysis.analysis, analysis.sortkey FROM profile_analysis INNER JOIN profile ON (profile.id = profile_analysis.profile) INNER JOIN analysis ON (analysis.id = profile_analysis.analysis) WHERE profile_analysis.applies = 1 AND profile.id IN (SELECT profile FROM request WHERE subrequest = @request) ORDER BY analysis.sortkey
+	DECLARE profile_cur CURSOR FOR SELECT request.profile FROM request WHERE subrequest = @request GROUP BY request.profile
+	DECLARE @q1 NVARCHAR(MAX)
+	DECLARE @q2 NVARCHAR(MAX)
+	DECLARE @q3 NVARCHAR(MAX)
+	DECLARE @q4 NVARCHAR(MAX)
+	DECLARE @q5 NVARCHAR(MAX)
+	DECLARE @i INT
+	DECLARE @j INT
+	DECLARE @d INT
+	DECLARE @s NVARCHAR(MAX)
+	DECLARE @p NVARCHAR(MAX)
+	DECLARE @a1 NVARCHAR(MAX)
+	DECLARE @a2 NVARCHAR(MAX)
+	DECLARE @min float
+	DECLARE @max float
+	DECLARE @min_inc bit
+	DECLARE @max_inc bit
+	DECLARE @language VARCHAR(32)
+
+	-- Get the language setting for acutal user
+	SET @language = (SELECT language FROM users WHERE name = ORIGINAL_LOGIN())
+
+	-- Create horizontal table for measurement values
+	SET @q1 = 'CREATE TABLE ##t (# NVARCHAR(MAX),'
+	
+	-- Build the query to create the table
+	OPEN analysis_cur
+	FETCH NEXT FROM analysis_cur INTO @i, @d
+	WHILE @@FETCH_STATUS = 0
+		BEGIN
+			SET @q1 = @q1 + 'ID' + CONVERT(VARCHAR(MAX), @i) + ' NVARCHAR(MAX),'
+			FETCH NEXT FROM analysis_cur INTO @i, @d
+		END
+	SET @q1 = LEFT(@q1, LEN(@q1)-1) + ')'
+	CLOSE analysis_cur
+	
+	-- Create table by executing query
+	EXEC (@q1)
+
+	-- Build the query to insert the analysis services
+	SET @s = N'SELECT @s = ' + @language + ' FROM translation WHERE container = ' + '''' + 'analysis' + '''' + ' AND item = ' + '''' + 'caption_' + ''''
+	EXEC sp_executesql @query = @s,  @params = N'@s NVARCHAR(MAX) OUTPUT', @s = @s output
+	SET @q2 = 'INSERT INTO ##t (#,'
+	SET @q3 = '(' + '''' + ISNULL(@s, '') + '''' + ','
+
+	OPEN analysis_cur
+	FETCH NEXT FROM analysis_cur INTO @i, @d
+	WHILE @@FETCH_STATUS = 0
+		BEGIN
+			SET @s = (SELECT TOP 1 analysis.title FROM analysis WHERE analysis.id = @i)
+			SET @q2 = @q2 + 'ID' + CONVERT(VARCHAR(MAX), @i) + ','
+			SET @q3 = @q3 + '''' + ISNULL(@s,'') + '''' + ','
+			FETCH NEXT FROM analysis_cur INTO @i, @d
+		END
+	SET @q2 = LEFT(@q2, LEN(@q2)-1) + ') VALUES'
+	SET @q3 = LEFT(@q3, LEN(@q3)-1) + ')'
+	CLOSE analysis_cur
+
+	-- Execute query to insert the analysis services
+	EXEC (@q2 + @q3)
+	
+	-- Create an insert query for units
+	SET @s = N'SELECT @s = ' + @language + ' FROM translation WHERE container = ' + '''' + 'analysis' + '''' + ' AND item = ' + '''' + 'unit_' + ''''
+	EXEC sp_executesql @query = @s,  @params = N'@s NVARCHAR(MAX) OUTPUT', @s = @s output
+	SET @q2 = 'INSERT INTO ##t (#,'
+	SET @q3 = '(' + '''' + ISNULL(@s, '') + '''' + ','
+
+	OPEN analysis_cur
+	FETCH NEXT FROM analysis_cur INTO @i, @d
+	WHILE @@FETCH_STATUS = 0
+		BEGIN
+			SET @s = (SELECT analysis.unit FROM analysis WHERE analysis.id = @i)
+			SET @q2 = @q2 + 'ID' + CONVERT(VARCHAR(MAX), @i) + ','
+			SET @q3 = @q3 + '''' + ISNULL(@s,'') + '''' + ','
+			FETCH NEXT FROM analysis_cur INTO @i, @d
+		END
+	SET @q2 = LEFT(@q2, LEN(@q2)-1) + ') VALUES'
+	SET @q3 = LEFT(@q3, LEN(@q3)-1) + ')'
+	CLOSE analysis_cur
+	
+	-- Insert values
+	EXEC (@q2 + @q3)
+
+	-- Create an insert query for measurement values
+	SET @s = ''
+	SET @q2 = 'INSERT INTO ##t (#,'
+	SET @q3 = '(' + '''' + @s + '''' + ','
+
+	OPEN profile_cur
+	FETCH NEXT FROM profile_cur INTO @j
+	WHILE @@FETCH_STATUS = 0
+		BEGIN
+			
+			-- Create an insert query for inserting values
+			SET @p = (SELECT profile.description FROM profile WHERE profile.id = @j)
+			SET @q4 = 'INSERT INTO ##t (#,'
+			SET @q5 = '(' + '''' + ISNULL(@p, '') + '''' + ','
+
+			OPEN analysis_cur
+			FETCH NEXT FROM analysis_cur INTO @i, @d
+			WHILE @@FETCH_STATUS = 0
+				BEGIN
+					SET @min = (SELECT profile_analysis.lsl FROM profile_analysis WHERE profile_analysis.analysis = @i AND profile_analysis.profile = @j)
+					SET @max = (SELECT profile_analysis.usl FROM profile_analysis WHERE profile_analysis.analysis = @i AND profile_analysis.profile = @j)
+					SET @min_inc = (SELECT profile_analysis.lsl_include FROM profile_analysis WHERE profile_analysis.analysis = @i AND profile_analysis.profile = @j)
+					SET @max_inc = (SELECT profile_analysis.usl_include FROM profile_analysis WHERE profile_analysis.analysis = @i AND profile_analysis.profile = @j)
+
+					IF (SELECT COUNT(*) FROM analysis WHERE analysis.type ='A' AND analysis.id = @i) > 0
+					BEGIN
+						SET @a1 = (SELECT attribute.title FROM attribute WHERE attribute.analysis = @i AND attribute.value = @min)
+						SET @a2 = (SELECT attribute.title FROM attribute WHERE attribute.analysis = @i AND attribute.value = @max)
+						SET @p = IIF(@min = @max, @a1, IIF(@min IS NULL, '', IIF(@min_inc = 1, '>=', '>') + @s) + IIF(@min IS NULL OR @max IS NULL, '', ' ... ') + IIF(@max IS NULL, '', IIF(@max_inc = 1, '<=', '<') + @s))
+						SET @q4 = @q4 + 'ID' + CONVERT(VARCHAR(MAX), @i) + ','
+						SET @q5 = @q5 + '''' + ISNULL(@p,'') + '''' + ','
+					END
+					IF (SELECT COUNT(*) FROM analysis WHERE analysis.type ='A' AND analysis.id = @i) = 0
+					BEGIN
+						SET @p = IIF(@min = @max, CONVERT(VARCHAR(MAX), @min), IIF(@min IS NULL, '', IIF(@min_inc = 1, '>=', '>') + CONVERT(VARCHAR(MAX), @min)) + IIF(@min IS NULL OR @max IS NULL, '', ' ... ') + IIF(@max IS NULL, '', IIF(@max_inc = 1, '<=', '<') + CONVERT(VARCHAR(MAX), @max)))
+						SET @q4 = @q4 + 'ID' + CONVERT(VARCHAR(MAX), @i) + ','
+						SET @q5 = @q5 + '''' + ISNULL(@p,'') + '''' + ','
+					END
+					FETCH NEXT FROM analysis_cur INTO @i, @d
+				END
+			SET @q4 = LEFT(@q4, LEN(@q4)-1) + ') VALUES'
+			SET @q5 = LEFT(@q5, LEN(@q5)-1) + ')'
+
+			-- Insert values
+			EXEC (@q4 + @q5)
+			CLOSE analysis_cur
+			
+
+			FETCH NEXT FROM profile_cur INTO @j
+		END
+	CLOSE profile_cur
+
+	-- Return table
+	SELECT * FROM ##t
+
+	-- Cleanup tables and cursors
+	DROP TABLE ##t
+	DEALLOCATE analysis_cur
+	DEALLOCATE profile_cur
+END
+GO
 PRINT N'Prozedur "[dbo].[version_be]" wird geändert...';
 
 
@@ -386,7 +342,7 @@ BEGIN
 	SET NOCOUNT ON;
 
     -- Insert statements for procedure here
-	SET @version_be = 'v2.9.0'
+	SET @version_be = 'v2.9.1'
 END
 GO
 PRINT N'Erweiterte Eigenschaft "[dbo].[view_attachment_revision].[MS_DiagramPane1]" wird geändert...';
@@ -2052,22 +2008,6 @@ End
 
 
 GO
-PRINT N'Prozedur "[dbo].[mail_send]" wird aktualisiert...';
-
-
-GO
-EXECUTE sp_refreshsqlmodule N'[dbo].[mail_send]';
-
-
-GO
-PRINT N'Prozedur "[dbo].[mailqueue_process]" wird aktualisiert...';
-
-
-GO
-EXECUTE sp_refreshsqlmodule N'[dbo].[mailqueue_process]';
-
-
-GO
 PRINT N'Prozedur "[dbo].[spa_create]" wird aktualisiert...';
 
 
@@ -2081,20 +2021,6 @@ PRINT N'Prozedur "[dbo].[import_perform]" wird aktualisiert...';
 
 GO
 EXECUTE sp_refreshsqlmodule N'[dbo].[import_perform]';
-
-
-GO
-PRINT N'Vorhandene Daten werden auf neu erstellte Einschränkungen hin überprüft.';
-
-
-GO
-USE [$(DatabaseName)];
-
-
-GO
-ALTER TABLE [dbo].[material_hp] WITH CHECK CHECK CONSTRAINT [FK_material_hp];
-
-ALTER TABLE [dbo].[setup] WITH CHECK CHECK CONSTRAINT [CK_setup];
 
 
 GO
